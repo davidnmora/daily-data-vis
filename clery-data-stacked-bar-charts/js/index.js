@@ -1,62 +1,26 @@
 console.clear();
 
 const allRaces = [
-  "Black",
-  "Hispanic/Latino",
-  "White",
-  "Unknown",
-  "Asian/Pacific Islander",
-  "Native American"
+  "Rape",
+  "Folding",
+  "Statutory Rape",
 ];
-const months = ["January", "February", "March", "April", "May", "June"];
+const years = ["2013", "2014", "2015"];
 const processed = [
   {
-    Black: 22,
-    "Hispanic/Latino": 17,
-    White: 41,
-    Unknown: 6,
-    "Asian/Pacific Islander": 2,
-    "Native American": 2
+    "Rape": 16,
+    "Folding": 10,
+    "Statutory Rape": 0
   },
   {
-    Black: 21,
-    "Hispanic/Latino": 15,
-    White: 46,
-    Unknown: 1,
-    "Asian/Pacific Islander": 1,
-    "Native American": 0
+    "Rape": 26,
+    "Folding": 4,
+    "Statutory Rape": 0
   },
   {
-    Black: 37,
-    "Hispanic/Latino": 14,
-    White: 59,
-    Unknown: 0,
-    "Asian/Pacific Islander": 3,
-    "Native American": 1
-  },
-  {
-    Black: 29,
-    "Hispanic/Latino": 16,
-    White: 47,
-    Unknown: 2,
-    "Asian/Pacific Islander": 1,
-    "Native American": 1
-  },
-  {
-    Black: 26,
-    "Hispanic/Latino": 5,
-    White: 41,
-    Unknown: 6,
-    "Asian/Pacific Islander": 3,
-    "Native American": 0
-  },
-  {
-    Black: 0,
-    "Hispanic/Latino": 0,
-    White: 2,
-    Unknown: 0,
-    "Asian/Pacific Islander": 0,
-    "Native American": 0
+    "Rape": 25,
+    "Folding": 11,
+    "Statutory Rape": 3
   }
 ];
 let n = allRaces.length, // number of layers
@@ -68,17 +32,12 @@ let layers = stack(processed); // calculate the stack layout
 layers.forEach(function(d, i) {
   //adding keys to every datapoint
   d.forEach(function(dd, j) {
-    dd.month = months[j];
+    dd.month = years[j];
     dd.race = allRaces[i];
   });
 });
 
-let yGroupMax = d3.max(layers, function(layer) {
-    return d3.max(layer, function(d) {
-      return d[1] - d[0];
-    });
-  }),
-  yStackMax = d3.max(layers, function(layer) {
+let yStackMax = d3.max(layers, function(layer) {
     return d3.max(layer, function(d) {
       return d[1];
     });
@@ -89,7 +48,7 @@ let margin = { top: 40, right: 10, bottom: 20, left: 10 },
 
 let x = d3
   .scaleBand()
-  .domain(months)
+  .domain(years)
   .rangeRound([0, width])
   .padding(0.08);
 
@@ -132,7 +91,7 @@ let rect = layer
     return x(d.month);
   })
   .attr("y", height)
-  .attr("width", x.bandwidth())
+  .attr("width", x.bandwidth() / m)
   .attr("height", 0);
 
 rect
@@ -197,8 +156,6 @@ function change() {
 }
 
 function transitionGrouped() {
-  y.domain([0, yGroupMax]);
-
   rect
     .transition()
     .duration(500)
@@ -208,7 +165,6 @@ function transitionGrouped() {
     .attr("x", function(d) {
       return x(d.month) + z(d.race);
     })
-    .attr("width", x.bandwidth() / m)
     .transition()
     .attr("y", function(d) {
       return y(d.data[d.race]);
@@ -219,8 +175,6 @@ function transitionGrouped() {
 }
 
 function transitionStacked() {
-  y.domain([0, yStackMax]);
-
   rect
     .transition()
     .duration(500)
@@ -237,5 +191,4 @@ function transitionStacked() {
     .attr("x", function(d) {
       return x(d.month);
     })
-    .attr("width", x.bandwidth());
 }
