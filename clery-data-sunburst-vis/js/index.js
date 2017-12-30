@@ -44,9 +44,6 @@ createVisualization(json);
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
-
-
-
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
   vis.append("svg:circle")
@@ -72,15 +69,16 @@ function createVisualization(json) {
   // set domain of colors scale based on data
   colors.domain(uniqueNames);
 
-  // make sure this is done after setting the domain
-  drawLegend();
 
-
-  var path = vis.data([json]).selectAll("path")
+  // add each data as a group
+  var pathGroup = vis.selectAll(".path-group")
     .data(nodes)
-    .enter().append("svg:path")
+    .enter().append("g")
+      .attr("class", "path-group")
+
+  var path = pathGroup.append("svg:path")
     .attr("display", function(d) {
-      return d.depth ? null : "none";
+      return d.depth ? null : "none"; // hide root
     })
     .attr("d", arc)
     .attr("fill-rule", "evenodd")
@@ -89,6 +87,11 @@ function createVisualization(json) {
     })
     .style("opacity", 1)
     .on("mouseover", mouseover);
+
+  // d3.selectAll(".path-group").append("text")
+  //   .style("text-anchor", "middle")
+  //   .attr("startOffset", "50%")
+  //   .text("Hello!")
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
@@ -99,10 +102,9 @@ function createVisualization(json) {
 
 // Fade all but the current sequence
 function mouseover(d) {
-
+  console.log(d);
   //var percentage = (100 * d.value / totalSize).toPrecision(3);
   var percentageString = d.name; //EDDITED THIS PART__________
-  //IS THIS LINE THE "DOUBLE LEAF" problem??????************************************************************
 
   d3.select("#percentage")
     .text(percentageString);
@@ -151,105 +153,21 @@ function getAncestors(node) {
   return path;
 }
 
-
-function drawLegend() {
-
-  // Dimensions of legend item: width, height, spacing, radius of rounded rect.
-  var li = {
-    w2: 75,
-    h2: 30,
-    s2: 3,
-    r2: 3
-  };
-
-  var legend = d3.select("#legend").append("svg:svg")
-    .attr("width", li.w2)
-    .attr("height", colors.domain().length * (li.h2 + li.s2));
-
-  var g = legend.selectAll("g")
-    .data(colors.domain())
-    .enter().append("svg:g")
-    .attr("transform", function(d, i) {
-      return "translate(0," + i * (li.h2 + li.s2) + ")";
-    });
-
-  g.append("svg:rect")
-    .attr("rx", li.r2)
-    .attr("ry", li.r2)
-    .attr("width", li.w2)
-    .attr("height", li.h2)
-    .style("fill", function(d) {
-      return colors(d);
-    });
-
-  g.append("svg:text")
-    .attr("x", li.w2 / 2)
-    .attr("y", li.h2 / 2)
-    .attr("dy", "0.35em")
-    .attr("text-anchor", "middle")
-    .text(function(d) {
-      return d;
-    });
-}
-// Take a 2-column CSV and transform it into a hierarchical structure suitable
-// for a partition layout. The first column is a sequence of step names, from
-// root to leaf, separated by hyphens. The second column is a count of how 
-// often that sequence occurred.
-function buildHierarchy(csv) {
-  var root = {
-    "name": "root",
-    "children": []
-  };
-  for (var i = 0; i < csv.length; i++) {
-    var sequence = csv[i][0];
-    var size = +csv[i][1];
-    if (isNaN(size)) { // e.g. if this is a header row
-      continue;
-    }
-    var parts = sequence.split("-");
-    var currentNode = root;
-    for (var j = 0; j < parts.length; j++) {
-      var children = currentNode["children"];
-      var nodeName = parts[j];
-      var childNode;
-      if (j + 1 < parts.length) {
-        // Not yet at the end of the sequence; move down the tree.
-        var foundChild = false;
-        for (var k = 0; k < children.length; k++) {
-          if (children[k]["name"] == nodeName) {
-            childNode = children[k];
-            foundChild = true;
-            break;
-          }
-        }
-        // If we don't already have a child node for this branch, create it.
-        if (!foundChild) {
-          childNode = {
-            "name": nodeName,
-            "children": []
-          };
-          children.push(childNode);
-        }
-        currentNode = childNode;
-      } else {
-        // Reached the end of the sequence; create a leaf node.
-        childNode = {
-          "name": nodeName,
-          "size": size
-        };
-        children.push(childNode);
-      }
-    }
-  }
-  return root;
-};
-
 function getData() {
   return {
     "name": "ROOT NODE NOBODY SEES",
     "children": [{
         "name": "Investigation Proceeds",
-        "children": [{
+        "children": [{ 
+          "name": "Scheduled",
+          "size": 10
+        },{ 
+          "name": "Active Investigations",
+          "size": 10
+        },{ 
+          "name": "Decision not to charge",
+          "size": 10
+        },{
             "name": "Hearings",
             "children": [{
                 "name": "Found Responsible",
@@ -264,7 +182,13 @@ function getData() {
       }] // closes children of "Investigation Proceeds"
       }, {
         "name": "No Investigation",
-        "size": 100
+        "children": [{ 
+          "name": "Complainant doesn't respond or proceed",
+          "size": 10
+        },{ 
+          "name": "Informal Intervention",
+          "size": 10
+        }]
       }] // CLOSES ALL CHILD NODES
   };
 };
