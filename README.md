@@ -12,10 +12,18 @@ git commit -m "Write sample commit message in imperative mood (ie not 'Wrote sam
 git push
 ```
 
-## To view
-Within the specific project folder, simply double click on
-``` 
-index.html
+## How to use:
+Download repo, then 
 ```
-to open it in your favorite browser (which we all know should be chrome...)
-
+cd ~/Downloads/daily/data-vis/specific-project
+```
+(or into wherever you've downloaded it).
+Because it relies on requests for JSON files, you've got to launch a local server. Type into the terminal:
+```
+python -m SimpleHTTPServer 8000
+```
+then open your fave browser and find it served to the url
+```
+localhost:8000
+```
+You're flying!
