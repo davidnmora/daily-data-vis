@@ -1,39 +1,46 @@
 console.clear();
 
-const allRaces = [
+const offenseNames = [
   "Rape",
-  "Folding",
-  "Statutory Rape",
+  "Fondling",
+  "Statutory Rape"
 ];
 const years = ["2013", "2014", "2015"];
-const processed = [
+const dataByYear = [
   {
     "Rape": 16,
-    "Folding": 10,
+    "Fondling": 10,
     "Statutory Rape": 0
   },
   {
     "Rape": 26,
-    "Folding": 4,
+    "Fondling": 4,
     "Statutory Rape": 0
   },
   {
     "Rape": 25,
-    "Folding": 11,
+    "Fondling": 11,
     "Statutory Rape": 3
   }
 ];
-let n = allRaces.length, // number of layers
-  m = processed.length, // number of samples per layer
-  stack = d3.stack().keys(allRaces);
 
-let layers = stack(processed); // calculate the stack layout
+const generateClassStr = str => {
+  return str.replace(/\s+/g, '-').toLowerCase();
+}
+
+let n = offenseNames.length, // number of layers
+  m = dataByYear.length, // number of samples per layer
+  stack = d3.stack().keys(offenseNames);
+
+let layers = stack(dataByYear); // calculate the stack layout
 
 layers.forEach(function(d, i) {
-  //adding keys to every datapoint
+  // add keys to every datapoint
   d.forEach(function(dd, j) {
-    dd.month = years[j];
-    dd.race = allRaces[i];
+    dd.year = years[j];
+    dd.offenseName = offenseNames[i];
+    dd.class = generateClassStr(dd.offenseName);
+    dd.value =  dd.data[dd.offenseName]
   });
 });
 
@@ -58,17 +65,30 @@ let y = d3
   .range([height, 0]);
 let z = d3
   .scaleBand()
-  .domain(allRaces)
+  .domain(offenseNames)
   .rangeRound([0, x.bandwidth()]);
-let color = d3.scaleOrdinal(d3.schemeCategory20c).domain([0, n - 1]);
+let color = ["#7fc97f", "#beaed4", "#fdc086"]
 
 let svg = d3
   .select("body")
   .append("svg")
-  .attr("width", width + margin.left + margin.right)
+  .attr("width", width + margin.left + margin.right + 20)
   .attr("height", height + margin.top + margin.bottom)
   .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  .attr("transform", "translate(" + (margin.left + 20) + "," + margin.top + ")");
+
+// Add the y Axis
+svg.append("g")
+    .call(d3.axisLeft(y));
+
+// text label for the y axis
+svg.append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("y", 0 - margin.left - 60)
+  .attr("x", 0 - (height / 2))
+  .attr("dy", "3em")
+  .style("text-anchor", "middle")
+  .text("Number of Offenses per Year"); 
 
 let layer = svg
   .selectAll(".layer")
@@ -77,22 +97,46 @@ let layer = svg
   .append("g")
   .attr("class", "layer")
   .style("fill", function(d, i) {
-    return color(i);
+    return color[i];
   });
 
+// Define the div for the tooltip
+let tooltip = d3.select("body").append("div") 
+    .attr("class", "tooltip")       
+    .style("opacity", 0);
+
 let rect = layer
-  .selectAll("rect")
+  .selectAll(".bar")
   .data(function(d) {
     return d;
   })
   .enter()
   .append("rect")
+  .attr("class", d => generateClassStr(d.offenseName) + " bar")
   .attr("x", function(d) {
-    return x(d.month);
+    return x(d.year);
   })
   .attr("y", height)
   .attr("width", x.bandwidth() / m)
-  .attr("height", 0);
+  .attr("height", 0)
+  .on("mouseover", d => {
+    d3.selectAll(".bar")
+      .filter(dd => dd.class != d.class)
+      .style("opacity", 0.6)
+  })
+  .on("mousemove", function(d) {   
+    tooltip
+      .style("opacity", .9) 
+      .html(d.offenseName + "<br/><b>" + d.value + "</b> cases")  
+      .style("left", (d3.event.pageX - 10) + "px")   
+      .style("top", (d3.event.pageY - 40) + "px");  
+    })          
+  .on("mouseout", function(d) {  
+    d3.selectAll(".bar").style("opacity", 1) 
+    tooltip.transition()    
+        .duration(500)    
+        .style("opacity", 0); 
+  });
 
 rect
   .transition()
@@ -105,6 +149,7 @@ rect
   .attr("height", function(d) {
     return y(d[0]) - y(d[1]);
   });
+
 svg
   .append("g")
   .attr("class", "x axis")
@@ -113,7 +158,7 @@ svg
 
 let legend = svg
   .selectAll(".legend")
-  .data(allRaces)
+  .data(offenseNames)
   .enter()
   .append("g")
   .attr("class", "legend")
@@ -127,7 +172,7 @@ legend
   .attr("width", 18)
   .attr("height", 18)
   .style("fill", function(d, i) {
-    return color(i);
+    return color[i];
   });
 
 legend
@@ -142,17 +187,8 @@ legend
 
 d3.selectAll("input").on("change", change);
 
-let timeout = setTimeout(function() {
-  d3
-    .select('input[value="grouped"]')
-    .property("checked", true)
-    .each(change);
-}, 2000);
-
 function change() {
-  clearTimeout(timeout);
-  if (this.value === "grouped") transitionGrouped();
-  else transitionStacked();
+  (this.value === "grouped") ? transitionGrouped() : transitionStacked();
 }
 
 function transitionGrouped() {
@@ -163,14 +199,14 @@ function transitionGrouped() {
       return i * 10;
     })
     .attr("x", function(d) {
-      return x(d.month) + z(d.race);
+      return x(d.year) + z(d.offenseName);
     })
     .transition()
     .attr("y", function(d) {
-      return y(d.data[d.race]);
+      return y(d.data[d.offenseName]);
     })
     .attr("height", function(d) {
-      return height - y(d.data[d.race]);
+      return height - y(d.data[d.offenseName]);
     });
 }
 
@@ -189,6 +225,6 @@ function transitionStacked() {
     })
     .transition()
     .attr("x", function(d) {
-      return x(d.month);
+      return x(d.year);
     })
 }
