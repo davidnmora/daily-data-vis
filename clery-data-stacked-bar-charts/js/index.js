@@ -77,6 +77,18 @@ let svg = d3
   .append("g")
   .attr("transform", "translate(" + (margin.left + 20) + "," + margin.top + ")");
 
+
+let yGridScale = d3.scaleLinear().range([height, 0]);
+
+// add the Y gridlines
+svg.append("g")     
+    .attr("class", "grid")
+    .call(d3.axisLeft(y)
+        .ticks(10)
+        .tickSize(-width)
+        .tickFormat("")
+    )
+
 // Add the y Axis
 svg.append("g")
     .call(d3.axisLeft(y));
@@ -128,14 +140,12 @@ let rect = layer
     tooltip
       .style("opacity", .9) 
       .html(d.offenseName + "<br/><b>" + d.value + "</b> cases")  
-      .style("left", (d3.event.pageX - 10) + "px")   
-      .style("top", (d3.event.pageY - 40) + "px");  
+      .style("left", (d3.mouse(this)[0]) + "px")   
+      .style("top",  (d3.mouse(this)[1]) + "px");  
     })          
   .on("mouseout", function(d) {  
     d3.selectAll(".bar").style("opacity", 1) 
-    tooltip.transition()    
-        .duration(500)    
-        .style("opacity", 0); 
+    tooltip.style("opacity", 0); 
   });
 
 rect
