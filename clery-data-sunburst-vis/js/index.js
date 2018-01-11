@@ -88,10 +88,12 @@ function createVisualization(json) {
     .style("opacity", 1)
     .on("mouseover", mouseover);
 
-  // d3.selectAll(".path-group").append("text")
-  //   .style("text-anchor", "middle")
-  //   .attr("startOffset", "50%")
-  //   .text("Hello!")
+  d3.selectAll(".path-group").append("text")
+    .style("text-anchor", "middle")
+    .attr("startOffset", "50%")
+    .attr("x", d => d.x)
+    .attr("y", d => d.y)
+    .text(d => {console.log(d); return d.name})
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);

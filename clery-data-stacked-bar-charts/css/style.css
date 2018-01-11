@@ -43,3 +43,7 @@ div.tooltip {
   stroke-opacity: 0.7;
   shape-rendering: crispEdges;
 }
+
+g.grid {
+  stroke-opacity: 0;
+}

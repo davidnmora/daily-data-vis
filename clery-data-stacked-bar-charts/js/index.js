@@ -49,7 +49,7 @@ let yStackMax = d3.max(layers, function(layer) {
       return d[1];
     });
   });
-let margin = { top: 40, right: 15, bottom: 40, left: 50 },
+let margin = { top: 70, right: 15, bottom: 40, left: 50 },
   fullChartWidth = fullChartHeight = 500,
   width  = fullChartWidth  - margin.left - margin.right,
   height = fullChartHeight - margin.top  - margin.bottom;
@@ -121,7 +121,7 @@ let rect = layer
       .style("opacity", .9) 
       .html("<b>" + d.value + "</b> cases of " + d.offenseName + " in " + d.year)  
       .style("left", (d3.mouse(this)[0]) + "px")   
-      .style("top",  (d3.mouse(this)[1]) + "px");  
+      .style("top",  (d3.mouse(this)[1]) + 40 + "px");  
     })          
   .on("mouseout", function(d) {  
     d3.selectAll(".bar").style("opacity", 1) 
