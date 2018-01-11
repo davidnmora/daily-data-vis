@@ -6,7 +6,7 @@ const offenseNames = [
   "Statutory Rape"
 ];
 const years = ["2013", "2014", "2015"];
-const dataByYear = [
+const offensesByYear = [
   {
     "Rape": 16,
     "Fondling": 10,
@@ -28,11 +28,11 @@ const generateClassStr = str => {
   return str.replace(/\s+/g, '-').toLowerCase();
 }
 
-let n = offenseNames.length, // number of layers
-  m = dataByYear.length, // number of samples per layer
-  stack = d3.stack().keys(offenseNames);
+let n     = offenseNames.length, // number of layers
+    m     = offensesByYear.length, // number of samples per layer
+    stack = d3.stack().keys(offenseNames);
 
-let layers = stack(dataByYear); // calculate the stack layout
+let layers = stack(offensesByYear); // calculate the stack layout
 
 layers.forEach(function(d, i) {
   // add keys to every datapoint
@@ -49,9 +49,14 @@ let yStackMax = d3.max(layers, function(layer) {
       return d[1];
     });
   });
-let margin = { top: 40, right: 10, bottom: 20, left: 10 },
-  width = 960 - margin.left - margin.right,
-  height = 500 - margin.top - margin.bottom;
+let margin = { top: 40, right: 15, bottom: 40, left: 50 },
+  fullChartWidth = fullChartHeight = 500,
+  width  = fullChartWidth  - margin.left - margin.right,
+  height = fullChartHeight - margin.top  - margin.bottom;
+
+d3.select("#stacked-bar-chart-container")
+  .style("width",  fullChartWidth)
+  .style("height", fullChartHeight)
 
 let x = d3
   .scaleBand()
@@ -70,37 +75,12 @@ let z = d3
 let color = ["#7fc97f", "#beaed4", "#fdc086"]
 
 let svg = d3
-  .select("body")
+  .select("#stacked-bar-chart-container")
   .append("svg")
   .attr("width", width + margin.left + margin.right + 20)
   .attr("height", height + margin.top + margin.bottom)
   .append("g")
   .attr("transform", "translate(" + (margin.left + 20) + "," + margin.top + ")");
-
-
-let yGridScale = d3.scaleLinear().range([height, 0]);
-
-// add the Y gridlines
-svg.append("g")     
-    .attr("class", "grid")
-    .call(d3.axisLeft(y)
-        .ticks(10)
-        .tickSize(-width)
-        .tickFormat("")
-    )
-
-// Add the y Axis
-svg.append("g")
-    .call(d3.axisLeft(y));
-
-// text label for the y axis
-svg.append("text")
-  .attr("transform", "rotate(-90)")
-  .attr("y", 0 - margin.left - 60)
-  .attr("x", 0 - (height / 2))
-  .attr("dy", "3em")
-  .style("text-anchor", "middle")
-  .text("Number of Offenses per Year"); 
 
 let layer = svg
   .selectAll(".layer")
@@ -139,7 +119,7 @@ let rect = layer
   .on("mousemove", function(d) {   
     tooltip
       .style("opacity", .9) 
-      .html(d.offenseName + "<br/><b>" + d.value + "</b> cases")  
+      .html("<b>" + d.value + "</b> cases of " + d.offenseName + " in " + d.year)  
       .style("left", (d3.mouse(this)[0]) + "px")   
       .style("top",  (d3.mouse(this)[1]) + "px");  
     })          
@@ -166,9 +146,31 @@ svg
   .attr("transform", "translate(0," + height + ")")
   .call(d3.axisBottom(x).tickSizeOuter(0));
 
+  // add the Y gridlines
+svg.append("g")     
+  .attr("class", "grid")
+  .call(d3.axisLeft(y)
+    .ticks(10)
+    .tickSize(-width)
+    .tickFormat("")
+  )
+
+// Add the y Axis
+svg.append("g")
+  .call(d3.axisLeft(y));
+
+// text label for the y axis
+svg.append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("y", 0 - margin.left - 30)
+  .attr("x", 0 - (height / 2))
+  .attr("dy", "3em")
+  .style("text-anchor", "middle")
+  .text("Offenses per Year"); 
+
 let legend = svg
   .selectAll(".legend")
-  .data(offenseNames)
+  .data(offenseNames.reverse()) // match stack order
   .enter()
   .append("g")
   .attr("class", "legend")
@@ -182,7 +184,7 @@ legend
   .attr("width", 18)
   .attr("height", 18)
   .style("fill", function(d, i) {
-    return color[i];
+    return color[offenseNames.length - 1 - i]; // match stack order
   });
 
 legend
